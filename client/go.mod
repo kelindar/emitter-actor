@@ -1,3 +1,6 @@
 module github.com/kelindar/emitter-actor/client
 
-require github.com/emitter-io/go/v2 v2.0.0-20190202153457-e676efe0cbab
+require (
+	github.com/emitter-io/go/v2 v2.0.0-20190217013915-55ee1e2d2ccf
+	github.com/kelindar/emitter-actor/actor v0.0.0-20190217010920-85a81684cd48
+)

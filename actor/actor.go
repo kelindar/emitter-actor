@@ -7,9 +7,6 @@ import (
 	emitter "github.com/emitter-io/go/v2"
 )
 
-// Key for 'actor/#/' channel, allowing us to do everything with any actor.
-//const key = "LkmxQlmzyBsByET468R1AWxh79Qu1kMS"
-
 // Handler represents a message handler
 type handler = func(to, from Sender, message string)
 
@@ -48,7 +45,7 @@ func (r remote) Send(cmd, message string) {
 // Actor represents a game actor
 type Actor struct {
 	Sender
-	name     string
+	Name     string
 	pubkey   string
 	handlers map[string]handler
 	network  *emitter.Client
@@ -58,24 +55,21 @@ type Actor struct {
 func New(subKey, pubKey, name string, network *emitter.Client, private bool) (actor *Actor, err error) {
 	actor = &Actor{
 		Sender:   Remote(pubKey, name, name, network),
+		Name:     name,
 		handlers: make(map[string]handler),
 		pubkey:   pubKey,
-		name:     name,
 		network:  network,
 	}
 
 	// Create a private link so we can receive dedicated replies
 	topic := topic(name)
 	if private {
-		link, err := network.CreatePrivateLink(subKey, "actor/", "s", false)
-		if err != nil {
-			return nil, err
-		}
-
-		topic = link.Channel
+		_, err := network.CreatePrivateLink(subKey, "actor/", "s", actor.onMessageReceived)
+		return actor, err
 	}
 
 	// Subscribe to the channel
+	println("subscribe to", topic)
 	err = network.Subscribe(subKey, topic, actor.onMessageReceived)
 	return
 }
@@ -93,7 +87,7 @@ func (a *Actor) onMessageReceived(_ *emitter.Client, msg emitter.Message) {
 	command := request[1]
 	message := request[2]
 	if fn, ok := a.handlers[command]; ok {
-		fn(a, Remote(a.pubkey, from, a.name, a.network), message)
+		fn(a, Remote(a.pubkey, from, a.Name, a.network), message)
 	}
 }
 

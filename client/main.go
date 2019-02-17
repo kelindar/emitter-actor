@@ -5,22 +5,37 @@ import (
 	"strings"
 
 	emitter "github.com/emitter-io/go/v2"
+	"github.com/kelindar/emitter-actor/actor"
 )
 
-var room = "room1"
-
 func main() {
-	client, err := emitter.Connect("", onMessageReceived)
+	client, err := emitter.Connect("", func(c *emitter.Client, msg emitter.Message) {
+		println("unknown message: ", msg.Topic(), string(msg.Payload()))
+	})
 	if err != nil {
 		panic(err)
 	}
+	
 
-	// Create a private link so we can receive dedicated replies
-	if _, err := client.CreatePrivateLink("4Xjj-2MKX6TxN8LqKfNJ6cBmIZniDgLO", "actor/", "s", true); err != nil {
-		panic(err)
-	}
+	subKey := "4Xjj-2MKX6TxN8LqKfNJ6cBmIZniDgLO" // The key for actor/ with SUBSCRIBE and EXTEND permissions
+	pubKey := "CJdKnIsQoMFxvSfmBqLz3LXbkdCfHbGW" // The key for "actor/#/" with only PUBLISH permissions
 
-	send(client, "enter", "")
+	// Create a room actor
+	room := actor.Remote(pubKey, "room1", client.ID(), client)
+	room.Send("enter", "")
+
+	// Create our own actor
+	self, _ := actor.New(subKey, pubKey, client.ID(), client, true)
+	self.On("move", func(to, from actor.Sender, message string) {
+		println("You walk through the door.", message)
+		room = actor.Remote(pubKey, message, client.ID(), client)
+		room.Send("enter", "")
+	})
+
+	self.On("tell", func(to, from actor.Sender, message string) {
+		println(message)
+	})
+
 	println("enter some text or 'q' to exit:")
 	for {
 		var text string
@@ -33,37 +48,7 @@ func main() {
 			return
 		}
 
-		send(client, text, "")
-	}
-}
-
-func send(c *emitter.Client, command, message string) {
-	payload := fmt.Sprintf("%s %s %s", c.ID(), command, message)
-
-	// The key is for "actor/#/", allowed only PUBLISH and nothing else
-	err := c.Publish("CJdKnIsQoMFxvSfmBqLz3LXbkdCfHbGW", topic(room), payload)
-	if err != nil {
-		println(err.Error())
-	}
-}
-
-func onMessageReceived(c *emitter.Client, msg emitter.Message) {
-	request := strings.SplitN(string(msg.Payload()), " ", 3)
-	if len(request) != 3 {
-		return
-	}
-
-	command := request[1]
-	message := request[2]
-	switch command {
-	case "move":
-		println("You walk through the door.", message)
-		room = message
-		send(c, "enter", "")
-	case "tell":
-		println(message)
-	default:
-		println("unknown message: ", msg.Topic(), string(msg.Payload()))
+		room.Send(text, "")
 	}
 }
 

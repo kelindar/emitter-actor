@@ -1,12 +1,12 @@
 package main
 
 import (
-
 	emitter "github.com/emitter-io/go/v2"
 	"github.com/kelindar/emitter-actor/actor"
 )
 
-const key = "iuERBYYtScnbp6YLagyHc8laQ94waUbc"
+// Key for 'actor/#/' channel, allowing us to do everything with any actor.
+const key = "LkmxQlmzyBsByET468R1AWxh79Qu1kMS"
 
 func main() {
 	client, err := emitter.Connect("", func(c *emitter.Client, msg emitter.Message) {
@@ -17,7 +17,7 @@ func main() {
 	}
 
 	// First room
-	room1 := actor.New("room1", client)
+	room1, _ := actor.New(key, key, "room1", client, false)
 	room1.On("enter", func(to, from actor.Sender, message string) {
 		from.Send("tell", "You've entered a dark room.")
 	})
@@ -32,7 +32,7 @@ func main() {
 	})
 
 	// Second room
-	room2 := actor.New("room2", client)
+	room2, _ := actor.New(key, key, "room2", client, false)
 	room2.On("enter", func(to, from actor.Sender, message string) {
 		from.Send("tell", "You've entered a big room.")
 	})
@@ -49,5 +49,4 @@ func main() {
 	println("server started")
 	for {
 	}
-	
 }
