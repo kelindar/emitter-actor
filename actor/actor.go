@@ -64,7 +64,8 @@ func New(subKey, pubKey, name string, network *emitter.Client, private bool) (ac
 	// Create a private link so we can receive dedicated replies
 	topic := topic(name)
 	if private {
-		_, err := network.CreatePrivateLink(subKey, "actor/", "s", actor.onMessageReceived)
+		link, err := network.CreatePrivateLink(subKey, "actor/", "s", actor.onMessageReceived)
+		println("subscribe to", link.Channel)
 		return actor, err
 	}
 

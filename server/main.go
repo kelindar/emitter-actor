@@ -19,7 +19,7 @@ func main() {
 	// First room
 	room1, _ := actor.New(key, key, "room1", client, false)
 	room1.On("enter", func(to, from actor.Sender, message string) {
-		from.Send("tell", "You've entered a dark room.")
+		from.Send("tell", "You've entered a dark room. You might need to look around.")
 	})
 	room1.On("look", func(to, from actor.Sender, message string) {
 		from.Send("tell", "You notice a small lamp on the desk.")

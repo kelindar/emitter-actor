@@ -15,7 +15,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	
 
 	subKey := "4Xjj-2MKX6TxN8LqKfNJ6cBmIZniDgLO" // The key for actor/ with SUBSCRIBE and EXTEND permissions
 	pubKey := "CJdKnIsQoMFxvSfmBqLz3LXbkdCfHbGW" // The key for "actor/#/" with only PUBLISH permissions
